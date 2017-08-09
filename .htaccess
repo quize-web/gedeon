@@ -1,0 +1,22 @@
+###
+RewriteEngine On
+RewriteBase /
+###
+
+### просим director.php указать нам путь :)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule .* index.php [L]
+###
+
+### занесение протокола в суперглобальную переменную
+RewriteCond %{HTTPS} off
+RewriteRule .* - [E=REQUEST_SCHEME:http]
+###
+RewriteCond %{HTTPS} on
+RewriteRule .* - [E=REQUEST_SCHEME:https]
+###
+
+### добавлем слеш в конце url'а
+#
+###
