@@ -8,10 +8,26 @@
 
 namespace modules;
 
+use core\router;
+
 
 class director
 {
 
+
+  /**
+   * Логика добавления новой страницы / каталога
+   *
+   * @return void
+   **/
+  public static function addition()
+  {
+
+    //
+
+    router::redirectTo(router::$parentFolderURI);
+
+  }
 
 
 }

@@ -3,7 +3,7 @@
     <th></th>
     <th>адрес</th>
     <th>таблица переменных</th>
-    <th><a href="#"><img src="/images/add-plus-button.svg"></a></th>
+    <th><a href="/panel/director/add/"><img src="/images/add-plus-button.svg"></a></th>
   </tr>
   <tr>
     <td><img src="/images/folder.svg" alt=""></td>

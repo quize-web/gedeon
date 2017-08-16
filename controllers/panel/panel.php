@@ -34,7 +34,7 @@ class panel
   public static function connect()
   {
 
-    ### создаем объект конструктора
+    ### создаем объект конструктора шаблонов
     self::$printer = new printer('panel');
 
     ### регистрируем базовый шаблон панели
@@ -63,9 +63,15 @@ class panel
 
       switch ($folder) {
 
-        case 'director':
-          director::connect();
+        case '404':
+          self::$printer->printBasicTemplate('basicPanelTemplate', ['purport' => 'error404']);
           break;
+
+        case 'director':
+          panelDirector::connect();
+          break;
+
+        default: router::to404();
 
       }
 

@@ -44,14 +44,21 @@ class printer
    *
    * @var $chosenSectors array
    **/
-  private $carcassSectors;
+  private $carcassSectors = [];
 
   /**
    * Базовый шаблон контроллера
    *
    * @var $basicTemplates array
    **/
-  private $basicTemplates;
+  private $basicTemplates = [];
+
+  /**
+   * Список переменных, используемых в построенном шаблоне
+   *
+   * @var $variables array
+   **/
+  private $variables = [];
 
 
   /**
@@ -98,7 +105,8 @@ class printer
       )
     );
 
-    return file_get_contents($carcassFile);
+    return
+      $this->includeFileContent($carcassFile);
 
   }
 
@@ -113,13 +121,58 @@ class printer
   private function getSectorContent($sectorName, $chosenSector)
   {
 
-    $carcassFile = router::folderToFile(
+    $sectorFile = router::folderToFile(
       router::deleteSlashes(
         $this->componentsPath . '/' . $sectorName . '/' . $chosenSector . '/'
       )
     );
 
-    return file_get_contents($carcassFile);
+    return
+      $this->includeFileContent($sectorFile);
+
+  }
+
+
+  /**
+   * Выводим данные файла через буфер
+   *
+   * Буфер необходим для отображения переменных,
+   * внедренных в построенный шаблон
+   *
+   * Функцией extract внедряем переменные,
+   * буфер и инклюд заберет только нужные
+   *
+   * @param $filePath string путь к файлу, контент которого мы выводим
+   * @return string
+   **/
+  private function includeFileContent($filePath)
+  {
+
+    ### внедряем переменные
+    extract($this->variables);
+
+    ### включаем буфер
+    ob_start();
+
+    ### заносим запрошенный файл в буфер
+    include($filePath);
+
+    ### получаем содержимое файла из буфера и очищаем буфер
+    return ob_get_clean();
+
+  }
+
+
+  /**
+   * Внедрить переменную в шаблон
+   *
+   * @param $variables array внедряемая переменная
+   * @return void
+   **/
+  public function injectVariables($variables)
+  {
+
+    $this->variables = array_merge($this->variables, $variables);
 
   }
 
@@ -427,7 +480,7 @@ class printer
     $this->includeBasicTemplate($basicTemplateName)->fillSectors($chosenSectorsArray);
 
     ### игнорируем, если нужно, пустые сектора
-    if($ignoreEmptySectors) $this->ignoreEmptySectors();
+    if ($ignoreEmptySectors) $this->ignoreEmptySectors();
 
     ### выводим базовый шаблон
     $this->print();

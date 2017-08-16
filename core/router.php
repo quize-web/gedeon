@@ -57,31 +57,69 @@ class router
    *
    * Пример: https://gedeon.io/
    *
-   * @var $url string
+   * @var $URL string
    **/
-  public static $url;
+  public static $URL;
 
   /**
    * Адрес запроса
    *
    * Пример: /pages/contacts/
    *
-   * @var $urn string
+   * @var $URN string
    **/
-  public static $urn;
+  public static $URN;
 
   /**
    * Полный адрес ресурса
    *
-   * Пример: https://gedeon.io/pages/contacts/)
+   * Пример: https://gedeon.io/pages/contacts/
    *
-   * @var $uri string
+   * @var $URI string
    **/
-  public static $uri;
+  public static $URI;
+
+  /**
+   * Путь к панели (можно задать tuner'ом)
+   *
+   * Пример: /panel/
+   *
+   * @var $panelName string
+   **/
+  public static $panelName = '/panel/';
+
+  /**
+   * Корневой адрес панели
+   *
+   * Пример: https://gedeon.io/panel/
+   *
+   * @var $panelURI string
+   **/
+  public static $panelURL;
+
+  /**
+   * Адрес запроса панели
+   *
+   * Пример: /director/add/
+   *
+   * @var $panelURN string
+   **/
+  public static $panelURN;
+
+  /**
+   * Адрес родительского каталога
+   *
+   * Пример:
+   * текущий адрес - https://gedeon.io/panel/director/add/
+   * адрес родительского каталога - https://gedeon.io/panel/director/
+   *
+   * @var $parentFolderURI string
+   **/
+  public static $parentFolderURI;
 
 
   /**
-   * Устанавливаем константы путей
+   * Устанавливаем / строим константы путей
    *
    * @return void
    **/
@@ -90,17 +128,23 @@ class router
 
     self::$root = $_SERVER['DOCUMENT_ROOT'] . '/';
 
-    self::$domain = $_SERVER['HTTP_HOST'];
-
     self::$protocol = $_SERVER['REQUEST_SCHEME'];
 
-    self::$url = self::$protocol . '://' . self::$domain . '/';
-
-    self::$urn = $_SERVER['REQUEST_URI'];
-
-    self::$uri = self::deleteSlashes(self::$url . self::$urn, 'double');
+    self::$domain = $_SERVER['HTTP_HOST'];
 
     self::$TLD = strstr(self::$domain, '.');
+
+    self::$URL = self::$protocol . '://' . self::$domain . '/';
+
+    self::$URN = $_SERVER['REQUEST_URI'];
+
+    self::$URI = self::deleteSlashes(self::$URL . self::$URN);
+
+    self::$panelURL = self::deleteSlashes(self::$URL . self::$panelName);
+
+    self::$panelURN = self::deleteSlashes(str_replace(self::$panelURL, '/', self::$URI));
+
+    self::$parentFolderURI = dirname(self::$URI) . '/';
 
   }
 
@@ -122,12 +166,22 @@ class router
   /**
    * Строим массив из urn
    *
+   * @param $mode string
    * @return array
    **/
-  public static function buildArrayPath()
+  public static function buildArrayPath($mode = 'surface')
   {
 
-    $stringPath = self::deleteSlashes(self::$urn, 'first');
+    switch ($mode) {
+
+      case 'panel':
+        $stringPath = self::deleteSlashes(self::$panelURN, 'both');
+        break;
+
+      default:
+        $stringPath = self::deleteSlashes(self::$URN, 'both');
+
+    }
 
     return explode('/', $stringPath);
 
@@ -157,7 +211,7 @@ class router
   {
 
     return
-      (self::buildArrayPath()[0] == 'panel');
+      (self::buildArrayPath()[0] == self::deleteSlashes(self::$panelName, 'both'));
 
   }
 
@@ -170,7 +224,11 @@ class router
   public static function connectToController()
   {
 
-    if (self::isPanel()) panel::connect();
+    if (self::isPanel()) {
+      panel::connect();
+
+    } else
+      self::to404();
 
   }
 
@@ -196,7 +254,7 @@ class router
    * @param $position string откуда удаляем слеши
    * @return string
    **/
-  public static function deleteSlashes($string, $position = 'double')
+  public static function deleteSlashes($string, $position = 'plenty')
   {
 
     switch ($position) {
@@ -210,8 +268,8 @@ class router
       case ('both'):
         return trim($string, '/');
 
-      case ('double'):
-        return preg_replace('@(?<!\:)\/\/@', '/', $string);
+      case ('plenty'):
+        return preg_replace('@(?<!\:)\/\/+@', '/', $string);
 
       default:
         return false;
@@ -227,7 +285,7 @@ class router
    * Пример:
    * было - /pages/contacts/moscow/
    * было - pages/contacts/moscow
-   * стало - /pages/contaxts/moscow.php
+   * стало - /pages/contacts/moscow.php
    *
    * @param $folderPath string строка пути
    * @param $extension string расширение файла
@@ -250,6 +308,69 @@ class router
       else return $folderPath . '.' . $extension;
 
     }
+
+  }
+
+
+  /**
+   * Проверка наличия POST или GET запроса
+   *
+   * @param $returnMethod boolean возвращать или не возвращать тип запроса в виде строки
+   * @return mixed
+   **/
+  public static function haveRequest($returnMethod = false)
+  {
+
+    if (empty($_POST) && empty($_GET)) return false;
+
+    if ($returnMethod)
+      return $_SERVER["REQUEST_METHOD"];
+    else
+      return true;
+
+  }
+
+
+  /**
+   * Редирект на страницу с ошибкой 404
+   *
+   * Заголовок header также передается с ошибкой 404
+   *
+   * @return void
+   **/
+  public static function to404()
+  {
+
+    header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found', true, 404);
+
+    if (self::isPanel())
+      $page404URL = self::deleteSlashes(self::$panelURL . '/404/');
+    else
+      $page404URL = self::deleteSlashes(self::$URL . '/404/');
+
+    header('Location: ' . $page404URL);
+
+    exit;
+
+  }
+
+
+  /**
+   * Редирект на страницу
+   *
+   * @param $address string страница, на которую нужно сделать редирект
+   * @param $returnHeader boolean отправлять или не отправлять заголовок редиректа
+   * @return void
+   **/
+  public static function redirectTo($address, $returnHeader = false)
+  {
+
+    if ($returnHeader)
+      header($_SERVER['SERVER_PROTOCOL'] . ' 301 Moved Permanently', true, 301);
+
+    header('Location: ' . $address);
+
+    exit;
 
   }
 

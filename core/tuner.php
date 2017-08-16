@@ -74,10 +74,11 @@ class tuner
    * @return void
    **/
   public static function databaseLoginData(
+    $database = 'gedeon',
     $server = 'localhost',
     $user = 'root',
-    $password = 'root',
-    $database = 'gedeon')
+    $password = 'root'
+  )
   {
 
     database::$server = $server;
@@ -100,6 +101,20 @@ class tuner
   {
 
     database::$charset = $charset;
+
+  }
+
+
+  /**
+   * Установить путь / адрес панели
+   *
+   * @param $panelName string название панели
+   * @return void
+   **/
+  public static function setPanelName($panelName)
+  {
+
+    router::$panelName = $panelName;
 
   }
 
