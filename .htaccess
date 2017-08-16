@@ -3,7 +3,7 @@ RewriteEngine On
 RewriteBase /
 ###
 
-### просим director.php указать нам путь :)
+### просим index.php указать нам путь :)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule .* index.php [L]
