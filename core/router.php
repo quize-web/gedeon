@@ -92,6 +92,7 @@ class router
    * Путь к панели (можно задать tuner'ом)
    *
    * Пример: /panel/
+   * Путь к панели также можно задать tuner'ом
    *
    * @var $panelName string
    **/

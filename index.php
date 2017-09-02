@@ -7,58 +7,53 @@
  */
 
 
-/**
+/* * *
  *
  * Gedeon CMS
  *
  * @version 0.1
  *
- **/
+ * * */
 
 
 /* *
  * Подключение ядра
  * */
 
-### управление путями
-require_once('core/router.php');
-
-use core\router;
-
-### настройщик
-require_once('core/tuner.php');
-
-use core\tuner;
-
-### методы для работы с базой данных
-require_once('core/database.php');
-
-use core\database;
-
-### ядро для запуска системы
+### подключаем и инициализируем ядро
 require_once('core/core.php');
 
 use core\core;
 
+### подключаем необходимые для запуска ядра скрипты (в папке core)
+core::buildCore();
+
 
 /* * *
- * Настройки (используется специальный настройщик tuner)
+ * Настройки (используется специальный глобальный настройщик tuner)
  * * */
 
-### режим обработки ошибок
-tuner::setErrorHandlingMode(1);
+require_once('modules/tuner.php');
+
+use modules\tuner;
 
 ### кодировка приложения
 tuner::setCharset('utf-8');
 # по умолчанию базе данных задается та же кодировка,
 # но ее можно изменить методом tuner::setDatabaseCharset
 
+### режим обработки ошибок
+tuner::setErrorHandlingMode(1);
+
 ### авторизационные данные для подключения к базе данных
 tuner::databaseLoginData();
 ### настройки по умолчанию - для локального сервера
 
-### задаем путь / адрес к панели (по умолчанию - '/panel/')
-tuner::setPanelName('/panel/');
+### отображать ли скорость загрузки приложения
+tuner::revealPageLoadTime(true);
+
+### задаем название пути к панели управления (по умолчанию - 'panel')
+tuner::setPanelName('panel');
 
 
 ### запуск ядра ###

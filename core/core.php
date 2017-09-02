@@ -9,22 +9,24 @@
 namespace core;
 
 
+use modules\stopwatcher;
+
 class core
 {
 
-  
+
   /**
-  * Кодировка приложения
-  *
-  * @var $charset string
-  **/
+   * Кодировка приложения
+   *
+   * @var $charset string
+   **/
   public static $charset = 'utf-8';
 
   /**
-  * Режим обработки ошибок
-  *
-  * @var $errorHandlingMode integer
-  **/
+   * Режим обработки ошибок
+   *
+   * @var $errorHandlingMode integer
+   **/
   public static $errorHandlingMode = 1;
 
   /**
@@ -36,30 +38,63 @@ class core
 
 
   /**
-   * Запуск процессов, необходимых для функционирования приложения
+   * Подключение необходимых классов для дальнейшей настройки и запуска
    *
-   * Порядок важен
+   * @return void
+   **/
+  public static function buildCore()
+  {
+
+    ### управление путями
+    require_once('router.php');
+
+    ### методы для работы с базой данных
+    require_once('database.php');
+
+  }
+
+
+  /**
+   * Запуск ядра
    *
-   * @uses router
-   * @uses database
    * @return void
    **/
   public static function run()
   {
 
+    self::engageToggles();
+
+    if (self::$revealPageLoadTime)
+      echo stopwatcher::getPageLoadTime();
+
+  }
+
+
+  /**
+   * Запуск процессов, необходимых для функционирования приложения
+   *
+   * Внимание: порядок выполнения важен
+   *
+   * @uses database
+   * @uses router
+   * @return void
+   **/
+  public static function engageToggles()
+  {
+
     ### режим обработки ошибок
     self::setErrorHandlingMode(self::$errorHandlingMode);
 
-    ### устаналиваем все свойства-пути
+    ### устаналиваем свойства-пути
     router::setPaths();
 
-    ### регистрируем всемодули и классы
+    ### регистрируем модули и классы
     self::bootClasses();
 
     ### подключаемся к базе данных
     database::connect();
 
-    ### подключаемся к необходимому нам контроллеру
+    ### подключаемся к необходимому контроллеру
     router::connectToController();
 
   }
@@ -96,7 +131,7 @@ class core
    * 0 - выключить отображение всех ошибок
    * 1 - включить отображение всех ошибок
    *
-   * @param $errorHandlingMode integer
+   * @param $errorHandlingMode integer свитчер (1 или 0)
    * @return void
    **/
   public static function setErrorHandlingMode(int $errorHandlingMode = 1)

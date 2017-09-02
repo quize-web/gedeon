@@ -16,19 +16,34 @@ class stopwatcher
 {
 
 
-  //
+  /**
+   * Засекаем время выполнения скрипта / скриптов (в мс)
+   *
+   * @param $anonymousFunction callable анонимная функция, внутри которой
+   * находится скрипт / скрипты, время которых необходимо засечь.
+   * @return float
+   **/
+  public static function pinpointScriptOutlay(callable $anonymousFunction): float
+  {
+
+    $startTime = microtime(true);
+
+    call_user_func($anonymousFunction);
+
+    return microtime(true) - $startTime;
+
+  }
 
 
   /**
-   * Засекаем необходимое время на выполнение скрипта
+   * Получить время загрузки приложения (в мс)
    *
-   * @param $script callable скрипт, время выполнения которого засекаем
    * @return float
    **/
-  public static function pinpointScriptOutlay(callable $script): float
+  public static function getPageLoadTime(): float
   {
 
-    //
+    return microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
 
   }
 

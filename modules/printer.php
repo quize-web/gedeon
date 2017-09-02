@@ -12,9 +12,9 @@ use Exception;
 use core\router;
 
 
-/**
+/* * *
  * Конструктор для построения frontend части приложения
- * */
+ * * */
 class printer
 {
 
@@ -168,6 +168,8 @@ class printer
 
   /**
    * Внедрить переменную в шаблон
+   *
+   * Внимание: массив должен быть ассоциативным!
    *
    * @param $variables array внедряемая переменная
    * @return void
@@ -402,7 +404,7 @@ class printer
   public function print()
   {
 
-    ### проверяем, не ли незаполненных секторов
+    ### проверяем, нет ли незаполненных секторов
     ### если есть, выдаем ошибку
     if ($this->someSectorsAreEmpty())
       throw new Exception('Есть незаполненные сектора. Заполните их, либо воспользуйтесь методом ignoreEmptySectors().');

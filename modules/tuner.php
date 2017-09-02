@@ -6,10 +6,14 @@
  * Time: 23:12
  */
 
-namespace core;
+namespace modules;
+
+use core\core;
+use core\router;
+use core\database;
 
 /* * *
- * Главный настройщик приложения
+ * Глобальный настройщик приложения
  * * */
 class tuner
 {
@@ -58,7 +62,7 @@ class tuner
   public static function revealPageLoadTime(bool $status = true)
   {
 
-    core::$revealPageLoadTime = true;
+    core::$revealPageLoadTime = $status;
 
   }
 
@@ -70,10 +74,10 @@ class tuner
    * @uses router
    * @return void
    **/
-  public static function setPanelName(string $panelName)
+  public static function setPanelName(string $panelName = 'panel')
   {
 
-    router::$panelName = $panelName;
+    router::$panelName = '/' . $panelName . '/';
 
   }
 
@@ -113,7 +117,7 @@ class tuner
    * @uses database
    * @return void
    **/
-  public static function setDatabaseCharset(string $charset)
+  public static function setDatabaseCharset(string $charset = 'utf-8')
   {
 
     database::$charset = $charset;
