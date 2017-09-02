@@ -11,6 +11,7 @@ namespace controllers\panel;
 use core\router;
 use controllers\panel\panel;
 use modules\director;
+use core\redirector;
 
 /**
  * Контроллер для каталог director
@@ -22,6 +23,8 @@ class panelDirector
   /**
    * Подключаемся к контроллеру director'а
    *
+   * @uses panel
+   * @uses redirector
    * @return void
    **/
   public static function connect()
@@ -38,7 +41,7 @@ class panelDirector
           break;
 
         default:
-          router::to404();
+          redirector::to404();
 
       }
 
@@ -55,14 +58,18 @@ class panelDirector
   /**
    * Контроллер добавления страницы / директории
    *
+   * @uses panel
    * @return void
    **/
   public static function add()
   {
 
     if (router::haveRequest()) director::addition();
-    else
+    else {
+
       panel::$printer->printBasicTemplate('basicPanelTemplate', ['purport' => 'directorAdd']);
+
+    }
 
   }
 

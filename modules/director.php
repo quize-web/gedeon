@@ -8,9 +8,13 @@
 
 namespace modules;
 
+use core\redirector;
 use core\router;
 
 
+/**
+ * Иерархическое представление архитектуры сайта
+ **/
 class director
 {
 
@@ -18,6 +22,8 @@ class director
   /**
    * Логика добавления новой страницы / каталога
    *
+   * @uses redirector
+   * @uses router
    * @return void
    **/
   public static function addition()
@@ -25,7 +31,7 @@ class director
 
     //
 
-    router::redirectTo(router::$parentFolderURI);
+    redirector::redirectTo(router::$parentFolderURI);
 
   }
 

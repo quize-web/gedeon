@@ -35,13 +35,22 @@ class router
   public static $domain;
 
   /**
-   * Протокол передачи
+   * Версия протокола передачи
+   *
+   * Пример: 'HTTP/1.1'
+   *
+   * @var $protocolVersion string
+   **/
+  public static $protocolVersion;
+
+  /**
+   * Тип протокола передачи
    *
    * http или https
    *
-   * @var $protocol string
+   * @var $protocolType string
    **/
-  public static $protocol;
+  public static $protocolType;
 
   /**
    * Домен верхнего уровня
@@ -128,13 +137,15 @@ class router
 
     self::$root = $_SERVER['DOCUMENT_ROOT'] . '/';
 
-    self::$protocol = $_SERVER['REQUEST_SCHEME'];
+    self::$protocolVersion = $_SERVER['SERVER_PROTOCOL'];
+
+    self::$protocolType = $_SERVER['REQUEST_SCHEME'];
 
     self::$domain = $_SERVER['HTTP_HOST'];
 
     self::$TLD = strstr(self::$domain, '.');
 
-    self::$URL = self::$protocol . '://' . self::$domain . '/';
+    self::$URL = self::$protocolType . '://' . self::$domain . '/';
 
     self::$URN = $_SERVER['REQUEST_URI'];
 
@@ -154,7 +165,7 @@ class router
    *
    * @return boolean
    **/
-  public static function isLocalServer()
+  public static function isLocalServer(): bool
   {
 
     ### если отсутствует домен верхнего уровня (TDL) - сервер локальный
@@ -169,7 +180,7 @@ class router
    * @param $mode string
    * @return array
    **/
-  public static function buildArrayPath($mode = 'surface')
+  public static function buildArrayPath(string $mode = 'surface'): array
   {
 
     switch ($mode) {
@@ -193,7 +204,7 @@ class router
    *
    * @return boolean
    **/
-  public static function isIndex()
+  public static function isIndex(): bool
   {
 
     return
@@ -207,7 +218,7 @@ class router
    *
    * @return boolean
    **/
-  public static function isPanel()
+  public static function isPanel(): bool
   {
 
     return
@@ -217,18 +228,37 @@ class router
 
 
   /**
+   * Проверяем, находимся ли мы на странице ошибки 404
+   *
+   * @return boolean
+   **/
+  public static function is404(): bool
+  {
+
+    # отдельное объявление переменной необходимо, так как функция 'end()'
+    # преобразовывает представление массива, меняя его содержимое
+    $arrayPath = self::buildArrayPath();
+
+    return
+      (end($arrayPath) == '404');
+
+  }
+
+
+  /**
    * Подключаем, если нужно, необходимый контроллер
    *
+   * @uses panel
+   * @uses redirector
    * @return void
    **/
   public static function connectToController()
   {
 
-    if (self::isPanel()) {
+    if (self::isPanel())
       panel::connect();
-
-    } else
-      self::to404();
+    else
+      redirector::to404();
 
   }
 
@@ -254,7 +284,7 @@ class router
    * @param $position string откуда удаляем слеши
    * @return string
    **/
-  public static function deleteSlashes($string, $position = 'plenty')
+  public static function deleteSlashes(string $string, string $position = 'plenty'): string
   {
 
     switch ($position) {
@@ -291,7 +321,7 @@ class router
    * @param $extension string расширение файла
    * @return string
    **/
-  public static function folderToFile($folderPath, $extension = 'php')
+  public static function folderToFile(string $folderPath, string $extension = 'php'): string
   {
 
     ### если строка заканчивается слешом
@@ -318,7 +348,7 @@ class router
    * @param $returnMethod boolean возвращать или не возвращать тип запроса в виде строки
    * @return mixed
    **/
-  public static function haveRequest($returnMethod = false)
+  public static function haveRequest(bool $returnMethod = false)
   {
 
     if (empty($_POST) && empty($_GET)) return false;
@@ -327,50 +357,6 @@ class router
       return $_SERVER["REQUEST_METHOD"];
     else
       return true;
-
-  }
-
-
-  /**
-   * Редирект на страницу с ошибкой 404
-   *
-   * Заголовок header также передается с ошибкой 404
-   *
-   * @return void
-   **/
-  public static function to404()
-  {
-
-    header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found', true, 404);
-
-    if (self::isPanel())
-      $page404URL = self::deleteSlashes(self::$panelURL . '/404/');
-    else
-      $page404URL = self::deleteSlashes(self::$URL . '/404/');
-
-    header('Location: ' . $page404URL);
-
-    exit;
-
-  }
-
-
-  /**
-   * Редирект на страницу
-   *
-   * @param $address string страница, на которую нужно сделать редирект
-   * @param $returnHeader boolean отправлять или не отправлять заголовок редиректа
-   * @return void
-   **/
-  public static function redirectTo($address, $returnHeader = false)
-  {
-
-    if ($returnHeader)
-      header($_SERVER['SERVER_PROTOCOL'] . ' 301 Moved Permanently', true, 301);
-
-    header('Location: ' . $address);
-
-    exit;
 
   }
 

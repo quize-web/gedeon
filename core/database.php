@@ -24,35 +24,35 @@ class database
    *
    * @var $server string
    **/
-  public static $server;
+  public static $server = 'localhost';
 
   /**
    * Пользователь, у которого есть права на управления базой данных
    *
    * @var $user string
    **/
-  public static $user;
+  public static $user = 'root';
 
   /**
    * Пароль для входа пользователя
    *
    * @var $password string
    **/
-  public static $password;
+  public static $password = 'root';
 
   /**
    * Название необходимой нам базы данных
    *
    * @var $database string
    **/
-  public static $database;
+  public static $database = 'gedeon';
 
   /**
    * Кодировка, с которой работает база данных
    *
    * @var $charset string
    **/
-  public static $charset;
+  public static $charset = 'utf8';
 
   /**
    * Объект, позволяющий управлять методами, работающих с базой данных
@@ -65,6 +65,7 @@ class database
   /**
    * Подключение к базе данных
    *
+   * @uses PDO
    * @return void
    **/
   public static function connect()
@@ -94,7 +95,7 @@ class database
    * @param $tableName string название таблицы
    * @return array
    **/
-  public static function getAll($tableName)
+  public static function getAll(string $tableName): array
   {
 
     return self::$PDO->query('SELECT * FROM ' . $tableName)->fetchAll();
@@ -109,7 +110,7 @@ class database
    * @param $filtersArray array условия фильтрации записей
    * @return array
    **/
-  public static function getFiltered($tableName, $filtersArray)
+  public static function getFiltered(string $tableName, array $filtersArray): array
   {
 
     $filtersString = self::filtersArrayToFiltersString($filtersArray);
@@ -132,7 +133,7 @@ class database
    * @param $filtersArray array массив с фильтрами
    * @return string
    **/
-  private static function filtersArrayToFiltersString($filtersArray)
+  private static function filtersArrayToFiltersString(array $filtersArray): string
   {
 
     $filtersNames = array_keys($filtersArray);

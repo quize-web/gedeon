@@ -64,9 +64,10 @@ class printer
   /**
    * Задаем пути к папкам с компонентами и каркасами
    *
+   * @uses router
    * @param $type string тип конструктора ('basic' или 'panel')
    **/
-  public function __construct($type = 'surface')
+  public function __construct(string $type = 'surface')
   {
 
     ### панель или нет?
@@ -94,9 +95,10 @@ class printer
    * Получить контент из файла каркаса
    *
    * @param $carcassName string название необходимого каркаса
+   * @uses router
    * @return string
    **/
-  private function getCarcassContent($carcassName)
+  private function getCarcassContent(string $carcassName): string
   {
 
     $carcassFile = router::folderToFile(
@@ -116,9 +118,10 @@ class printer
    *
    * @param $sectorName string название сектора
    * @param $chosenSector string название выбранного сектора
+   * @uses router
    * @return string
    **/
-  private function getSectorContent($sectorName, $chosenSector)
+  private function getSectorContent(string $sectorName, string $chosenSector): string
   {
 
     $sectorFile = router::folderToFile(
@@ -145,7 +148,7 @@ class printer
    * @param $filePath string путь к файлу, контент которого мы выводим
    * @return string
    **/
-  private function includeFileContent($filePath)
+  private function includeFileContent(string $filePath): string
   {
 
     ### внедряем переменные
@@ -169,7 +172,7 @@ class printer
    * @param $variables array внедряемая переменная
    * @return void
    **/
-  public function injectVariables($variables)
+  public function injectVariables(array $variables)
   {
 
     $this->variables = array_merge($this->variables, $variables);
@@ -181,10 +184,11 @@ class printer
    * Регистрируем каркас страницы
    *
    * @param $carcassName string название каркаса
+   * @uses Exception
    * @throws Exception выдает ошибку, если выбранный каркас уже существует
    * @return self
    **/
-  public function registerCarcass($carcassName)
+  public function registerCarcass(string $carcassName): self
   {
 
     ### проверяем наличие существующего каркаса
@@ -210,7 +214,7 @@ class printer
    * @param $carcassName string название каркаса, который будем парсить
    * @return void
    **/
-  private function parseCarcass($carcassName)
+  private function parseCarcass(string $carcassName)
   {
 
     ### получаем контент каркаса, необходимый для поиска переменных
@@ -234,7 +238,7 @@ class printer
    * @param $parseredSectorsArray array массив распарсенных секторов
    * @return void
    **/
-  private function registerSectors($parseredSectorsArray)
+  private function registerSectors(array $parseredSectorsArray)
   {
 
     ### берем второй элемент массива ([1]), потому что в первом у нас находятся
@@ -256,7 +260,7 @@ class printer
    * @param $componentName mixed каким компонентом заполняем
    * @return self
    **/
-  public function fillSector($sectorName, $componentName)
+  public function fillSector(string $sectorName, $componentName): self
   {
 
     if (
@@ -278,7 +282,7 @@ class printer
    * @param $sectorsArray array внедряемые сектора
    * @return self
    **/
-  public function fillSectors($sectorsArray)
+  public function fillSectors(array $sectorsArray): self
   {
 
     foreach ($sectorsArray as $sectorName => $componentName) {
@@ -296,10 +300,11 @@ class printer
    * Проверяем, можно ли заполнить сектор
    *
    * @param $sectorName string проверяемый сектор
+   * @uses Exception
    * @throws Exception выдает ошибку, если сектор не существует или уже заполнен
    * @return boolean
    **/
-  private function isFillable($sectorName)
+  private function isFillable(string $sectorName): bool
   {
 
     if (
@@ -319,10 +324,12 @@ class printer
    *
    * @param $component string путь к компонента (начинается от папки components)
    * @param $componentDirectory string директория компонента
+   * @uses Exception
+   * @uses router
    * @throws Exception выдает ошибку, если включаемого компонента не существует
    * @return boolean
    **/
-  private function isComponentExist($component, $componentDirectory)
+  private function isComponentExist(string $component, string $componentDirectory): bool
   {
 
     $fullPath =
@@ -349,7 +356,7 @@ class printer
    * @param $sectorsArray array массив с секторами
    * @return self
    **/
-  public function registerBasicTemplate($name, $chosenCarcass, $sectorsArray)
+  public function registerBasicTemplate(string $name, string $chosenCarcass, array $sectorsArray): self
   {
 
     ### заносим базовый шаблон (название каркаса и значение секторов)
@@ -367,7 +374,7 @@ class printer
    * @param $basicTemplateName string название базового шаблона
    * @return self
    **/
-  public function includeBasicTemplate($basicTemplateName)
+  public function includeBasicTemplate(string $basicTemplateName): self
   {
 
     ### извлекаем название каркаса выбранного базового шаблона и регистрируем его
@@ -388,6 +395,7 @@ class printer
   /**
    * Выводим шаблон
    *
+   * @uses Exception
    * @throws Exception выдает ошибку, если есть незаполненные сектора
    * @return void
    **/
@@ -430,7 +438,7 @@ class printer
    *
    * @return boolean
    **/
-  public function someSectorsAreEmpty()
+  public function someSectorsAreEmpty(): bool
   {
 
     foreach ($this->carcassSectors as $sector) {
@@ -451,7 +459,7 @@ class printer
    *
    * @return self
    **/
-  public function ignoreEmptySectors()
+  public function ignoreEmptySectors(): self
   {
 
     foreach ($this->carcassSectors as $sectorName => $sectorValue) {
@@ -473,7 +481,7 @@ class printer
    * @param $ignoreEmptySectors boolean игнорируем или нет пустые сектора
    * @return void
    **/
-  public function printBasicTemplate($basicTemplateName, $chosenSectorsArray, $ignoreEmptySectors = false)
+  public function printBasicTemplate(string $basicTemplateName, array $chosenSectorsArray, bool $ignoreEmptySectors = false)
   {
 
     ### внедряем базовый шаблон, регистрируем и заполняем сектора

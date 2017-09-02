@@ -11,6 +11,7 @@ namespace controllers\panel;
 use core\database;
 use core\router;
 use modules\printer;
+use core\redirector;
 
 /**
  *  Главный контроллер панели
@@ -29,6 +30,7 @@ class panel
   /**
    * Подключаемся к контроллеру панели
    *
+   * @uses printer
    * @return void
    **/
   public static function connect()
@@ -53,6 +55,8 @@ class panel
   /**
    * Поиск контроллера для текущей страницы
    *
+   * @uses router
+   * @uses redirector
    * @return void
    **/
   public static function directMe()
@@ -71,7 +75,7 @@ class panel
           panelDirector::connect();
           break;
 
-        default: router::to404();
+        default: redirector::to404();
 
       }
 

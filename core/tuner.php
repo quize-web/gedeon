@@ -8,58 +8,72 @@
 
 namespace core;
 
-/**
+/* * *
  * Главный настройщик приложения
- * */
+ * * */
 class tuner
 {
 
-  public static $charset;
 
   /**
-   * Регистрация загрузчика классов
+   * Режим обработки ошибок
    *
+   * 0 - выключить отображение всех ошибок
+   * 1 - включить отображение всех ошибок
+   *
+   * @param $errorHandlingMode integer
+   * @uses core
    * @return void
    **/
-  public static function bootClasses()
+  public static function setErrorHandlingMode(int $errorHandlingMode = 1)
   {
 
-    spl_autoload_register(function ($class_name) {
-
-      ### экранируем обратные слеши в пути класса
-      ### пример: было - core\database, стало - core/database
-      $class_path = str_replace('\\', '/', $class_name);
-
-      ### полный путь к файлу класса на сервере
-      $file_path = router::$root . $class_path . '.php';
-
-      ###  инклюдим найденный класс
-      include_once $file_path;
-
-    });
+    core::$errorHandlingMode = $errorHandlingMode;
 
   }
 
 
   /**
-   * Правило отображения ошибок
+   * Установить кодировку
    *
-   * 1 - включить отображение; 2 - выключить отображение.
-   *
-   * @param $status integer
+   * @param $charset string название кодировки
+   * @uses core
    * @return void
    **/
-  public static function error_mode($status = 1)
+  public static function setCharset(string $charset = 'utf-8')
   {
 
-    ### ошибки выполнения
-    ini_set('display_errors', $status);
+    core::$charset = $charset;
 
-    ### ошибки при запуске php
-    ini_set('display_startup_errors', $status);
+  }
 
-    ### уровень отображения ошибок
-    error_reporting(($status) ? E_ALL : 0);
+
+  /**
+   * Замерять ли скорость загрузки страницы
+   *
+   * @param $status boolean включен замер или выключен
+   * @uses core
+   * @return  void
+   **/
+  public static function revealPageLoadTime(bool $status = true)
+  {
+
+    core::$revealPageLoadTime = true;
+
+  }
+
+
+  /**
+   * Установить путь / адрес панели
+   *
+   * @param $panelName string название панели
+   * @uses router
+   * @return void
+   **/
+  public static function setPanelName(string $panelName)
+  {
+
+    router::$panelName = $panelName;
 
   }
 
@@ -71,6 +85,7 @@ class tuner
    * @param $user string пользователь, у которого есть права на управления базой данных
    * @param $password string пароль для входа пользователя
    * @param $database string название необходимой нам базы данных
+   * @uses database
    * @return void
    **/
   public static function databaseLoginData(
@@ -86,7 +101,7 @@ class tuner
     database::$password = $password;
     database::$database = $database;
 
-    database::$charset = self::$charset;
+    database::$charset = core::$charset;
 
   }
 
@@ -95,26 +110,13 @@ class tuner
    * Задаем особую кодировку для базы данных
    *
    * @param $charset string
+   * @uses database
    * @return void
    **/
-  public static function databaseCharset($charset)
+  public static function setDatabaseCharset(string $charset)
   {
 
     database::$charset = $charset;
-
-  }
-
-
-  /**
-   * Установить путь / адрес панели
-   *
-   * @param $panelName string название панели
-   * @return void
-   **/
-  public static function setPanelName($panelName)
-  {
-
-    router::$panelName = $panelName;
 
   }
 
