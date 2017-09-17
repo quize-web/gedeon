@@ -8,14 +8,15 @@
 
 namespace controllers\panel;
 
+use core\database;
 use core\router;
-use controllers\panel\panel;
 use modules\director;
 use core\redirector;
 
-/**
+/* * *
  * Контроллер для каталог director
- **/
+ * * */
+
 class panelDirector
 {
 
@@ -25,12 +26,13 @@ class panelDirector
    *
    * @uses panel
    * @uses redirector
+   * @uses router
    * @return void
    **/
   public static function connect()
   {
 
-    ### если есть какое-либо действие
+    ### если есть какое-либо действие (экшн)
     if ($action = router::buildArrayPath('panel')[1] ?? false) {
 
       switch ($action) {
@@ -38,6 +40,10 @@ class panelDirector
         ### добавление страницы / директории
         case ('add'):
           self::add();
+          break;
+
+        case ('delete'):
+          self::delete();
           break;
 
         default:
@@ -48,7 +54,17 @@ class panelDirector
       ### вывод director'а
     } else {
 
-      panel::$printer->printBasicTemplate('basicPanelTemplate', ['purport' => 'director']);
+      panel::$printer->injectVariables([
+        'elements' => database::getRows(
+          'pages',
+          ['parent' => '0'],
+          ['id', 'key', 'variableTable', 'type']
+        ),
+        'panelURL' => router::deleteSlashes(router::$panelURL, 'last'),
+        'URI' => router::$URI
+      ]);
+
+      panel::$printer->printBasicTemplate('basicPanelTemplate', ['purport' => 'director/index']);
 
     }
 
@@ -56,8 +72,10 @@ class panelDirector
 
 
   /**
-   * Контроллер добавления страницы / директории
+   * Контроллер добавления страницы / каталога / фильтра
    *
+   * @uses router
+   * @uses director
    * @uses panel
    * @return void
    **/
@@ -67,9 +85,31 @@ class panelDirector
     if (router::haveRequest()) director::addition();
     else {
 
-      panel::$printer->printBasicTemplate('basicPanelTemplate', ['purport' => 'directorAdd']);
+      panel::$printer->injectVariable('carcasses', panel::$printer->getCarcassesList());
+
+      panel::$printer->printBasicTemplate('basicPanelTemplate', ['purport' => 'director/add']);
 
     }
+
+  }
+
+
+  /**
+   * Контроллер удаления страницы / каталога / фильтра
+   *
+   * @uses router
+   * @uses director
+   * @uses redirector
+   * @return void
+   **/
+  public static function delete()
+  {
+
+    if (router::haveRequest(false, ['ID', 'originURI']))
+      director::delete($_POST['ID'], $_POST['originURI']);
+
+    else
+      redirector::to404();
 
   }
 

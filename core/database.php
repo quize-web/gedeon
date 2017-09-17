@@ -9,6 +9,8 @@
 namespace core;
 
 use PDO;
+use modules\editor;
+use Exception;
 
 
 /*
@@ -59,7 +61,7 @@ class database
    *
    * @var $PDO object
    **/
-  public static $PDO;
+  private static $PDO;
 
 
   /**
@@ -71,8 +73,8 @@ class database
   public static function connect()
   {
 
-    ### удаляем дефисы из названия кодировку (требует сам PDO)
-    $PDOcharset = str_replace('-', '', self::$charset);
+    ### обрабатываем название кодировки
+    $PDOcharset = self::formatCharsetForPDO(self::$charset);
 
     ### имя источника данных
     $dsn = 'mysql:
@@ -80,7 +82,7 @@ class database
     dbname=' . self::$database . ';
     charset=' . $PDOcharset;
 
-    ### особые настройки
+    ### специальные настройки
     $options = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
 
     ### подключаемся
@@ -90,36 +92,107 @@ class database
 
 
   /**
-   * Получить все записи таблицы
+   * Удаляем дефисы из названия кодировки (требует сам PDO)
    *
-   * @param $tableName string название таблицы
-   * @return array
+   * @param $originalCharset string название кодировки, которую необходимо обработать
+   * @return string
    **/
-  public static function getAll(string $tableName): array
+  private static function formatCharsetForPDO(string $originalCharset): string
   {
 
-    return self::$PDO->query('SELECT * FROM ' . $tableName)->fetchAll();
+    return str_replace('-', '', $originalCharset);
 
   }
 
 
   /**
-   * Получить отфильтрованные записи таблицы
+   * Выполнение ручного запроса
+   *
+   * @param $queryString string строка (текст) запроса
+   * @param $queryVariables mixed массив со переменными-значениями столбца/ов
+   * @return array
+   **/
+  public static function query(string $queryString, $queryVariables): array
+  {
+
+    ### готовим запрос
+    $query = self::$PDO->prepare($queryString . ';');
+
+    ### если переданный аргумент переменной не массив - создаем массив
+    if (!is_array($queryVariables)) $queryVariables = [$queryVariables];
+
+    ### внедряем переменные и отправлям запрос
+    $query->execute($queryVariables);
+
+    ### распаковываем ответ
+    return $query->fetchAll();
+
+  }
+
+
+  /**
+   * Получить записи таблицы
+   *
+   * Возможна фильтрация
    *
    * @param $tableName string название таблицы
    * @param $filtersArray array условия фильтрации записей
+   * @param $columnsNames string|array названия столбзов
    * @return array
    **/
-  public static function getFiltered(string $tableName, array $filtersArray): array
+  public static function getRows(string $tableName, array $filtersArray = [], $columnsNames = '*'): array
   {
 
-    $filtersString = self::filtersArrayToFiltersString($filtersArray);
+    ### генерируем строку с фильтрами
+    $filtersString = (!empty($filtersArray)) ?
+      self::generateFiltersString(array_keys($filtersArray)) : '';
 
-    $query = self::$PDO->prepare('SELECT * FROM `' . $tableName . '` WHERE ' . $filtersString);
+    ### генерируем строку со столбцами
+    $columnsString = self::generateColumnsString($columnsNames);
 
-    $query->execute(array_values($filtersArray));
+    ### возвращаем уже полученный ответ от БД
+    return
+      self::query('SELECT ' . $columnsString . ' FROM `' . $tableName . '` ' . $filtersString,
+        array_values($filtersArray)
+      );
 
-    return $query->fetchAll();
+  }
+
+
+  /**
+   * Добавить запись в таблицу
+   *
+   * @param $tableName string название таблицы
+   * @param $values array добавляемые столбцы и их значения
+   * @return array
+   **/
+  public static function addRow(string $tableName, array $values): array
+  {
+
+    $columnsString = self::generateColumnsString(array_keys($values));
+
+    $valuesString = self::generateValuesString($values);
+
+    return
+      self::query('INSERT INTO `' . $tableName . '` (' . $columnsString . ') VALUES (' . $valuesString . ')',
+        array_values($values)
+      );
+
+  }
+
+
+  /**
+   * Удаление записи из таблицы
+   *
+   * @param $tableName string название таблицы
+   * @param $rowID integer ID записи, которую удаляем из таблицы
+   * @param $keyColumn string ключ-столбец, по которому ищем запись в таблице
+   * @return array
+   **/
+  public static function deleteRow(string $tableName, int $rowID, string $keyColumn = 'id'): array
+  {
+
+    return self::query('DELETE FROM `' . $tableName . '` WHERE `' . $keyColumn . '` = ?', $rowID);
 
   }
 
@@ -128,23 +201,63 @@ class database
    * Превращаем массив с фильтрами в строку с фильтрами
    *
    * Пример возвращаемой строки:
-   * filter01 = ?, filter02 = ?
+   * 'WHERE filterExample01 = ? AND filterExample02 = ?'
    *
-   * @param $filtersArray array массив с фильтрами
+   * @param $filtersNames array массив с названиями фильтров
    * @return string
    **/
-  private static function filtersArrayToFiltersString(array $filtersArray): string
+  private static function generateFiltersString(array $filtersNames): string
   {
 
-    $filtersNames = array_keys($filtersArray);
+    return 'WHERE ' . editor::arrayToString($filtersNames, ' AND ', '` = ?', '`');
 
-    for ($i = 0; $i < count($filtersNames); $i++) {
+  }
 
-      $filtersNames[$i] .= ' = ?';
 
-    }
+  /**
+   * Превращаем массив со столбцами в строку со столбацими
+   *
+   * Пример возвращаемой строки:
+   * '`name`, `phone`'
+   *
+   * @param $columnsNames string|array строка с названием столбца (или массив с названиями столбцов)
+   * @uses editor
+   * @uses Exception
+   * @throws Exception выдает ошибку, когда передан некорректный аргумент
+   * @return string
+   **/
+  private static function generateColumnsString($columnsNames): string
+  {
 
-    return implode(' AND ', $filtersNames);
+    if ($columnsNames === '*') return $columnsNames;
+
+    elseif (is_string($columnsNames)) return '`' . $columnsNames . '`';
+
+    elseif (is_array($columnsNames))
+      return editor::arrayToString($columnsNames, ', ', '`', '`');
+
+    else throw new Exception('Передан некорректный аргумент (не строка и не массив).');
+
+  }
+
+
+  /**
+   * Генерируем строку из значений
+   *
+   * Пример возвращаемой строки:
+   * '?, ?, ?'
+   *
+   * @param $values array массив со значениями
+   * @return string
+   **/
+  private static function generateValuesString(array $values)
+  {
+
+    $values = array_map(function () {
+      return '?';
+    }, $values);
+
+    return implode(', ', $values);
 
   }
 

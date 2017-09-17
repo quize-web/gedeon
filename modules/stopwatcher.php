@@ -9,21 +9,36 @@
 namespace modules;
 
 
-/**
+/* * *
  * Секундомер
- **/
+ * * */
 class stopwatcher
 {
 
 
   /**
-   * Засекаем время выполнения скрипта / скриптов (в мс)
+   *  Отобразить время выполнения скрипта / скриптов
+   *
+   * @param $anonymousFunction callable анонимная функция, внутри которой
+   * находится скрипт / скрипты, время которых необходимо засечь.
+   * @return void
+   **/
+  public static function showScriptTimeOutlay(callable $anonymousFunction)
+  {
+
+    echo 'Script time outlay: ' . self::pinpointScriptTimeOutlay($anonymousFunction) . ' ms.';
+
+  }
+
+
+  /**
+   * Получить время выполнения скрипта / скриптов (в мс)
    *
    * @param $anonymousFunction callable анонимная функция, внутри которой
    * находится скрипт / скрипты, время которых необходимо засечь.
    * @return float
    **/
-  public static function pinpointScriptOutlay(callable $anonymousFunction): float
+  private static function pinpointScriptTimeOutlay(callable $anonymousFunction): float
   {
 
     $startTime = microtime(true);
@@ -36,11 +51,24 @@ class stopwatcher
 
 
   /**
+   *  Отобразить время загрузки приложения
+   *
+   * @return void
+   **/
+  public static function showApplicationTimeOutlay()
+  {
+    
+    echo 'Application time outlay: ' . self::pinpointApplicationTimeOutlay() . ' ms.';
+
+  }
+
+
+  /**
    * Получить время загрузки приложения (в мс)
    *
    * @return float
    **/
-  public static function getPageLoadTime(): float
+  private static function pinpointApplicationTimeOutlay(): float
   {
 
     return microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];

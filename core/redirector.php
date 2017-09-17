@@ -21,6 +21,7 @@ class redirector
    *
    * @uses router
    * @return void
+   * TODO: метод должен возвращать корректный заголовок
    **/
   public static function to404()
   {
@@ -51,6 +52,7 @@ class redirector
    * @param $address string страница, на которую нужно сделать редирект
    * @param $returnHeader boolean отправлять или не отправлять заголовок редиректа
    * @return void
+   * TODO: метод должен возвращать корректный заголовок
    **/
   public static function redirectTo(string $address, bool $returnHeader = false)
   {

@@ -34,7 +34,7 @@ class core
    *
    * @var $revealPageLoadTime boolean включен замер или выключен
    **/
-  public static $revealPageLoadTime = true;
+  public static $showApplicationTimeOutlay = true;
 
 
   /**
@@ -64,8 +64,8 @@ class core
 
     self::engageToggles();
 
-    if (self::$revealPageLoadTime)
-      echo stopwatcher::getPageLoadTime();
+    if (self::$showApplicationTimeOutlay)
+      stopwatcher::showApplicationTimeOutlay();
 
   }
 
@@ -79,7 +79,7 @@ class core
    * @uses router
    * @return void
    **/
-  public static function engageToggles()
+  private static function engageToggles()
   {
 
     ### режим обработки ошибок
@@ -105,7 +105,7 @@ class core
    * @uses router
    * @return void
    **/
-  public static function bootClasses()
+  private static function bootClasses()
   {
 
     spl_autoload_register(function ($class_name) {
@@ -134,7 +134,7 @@ class core
    * @param $errorHandlingMode integer свитчер (1 или 0)
    * @return void
    **/
-  public static function setErrorHandlingMode(int $errorHandlingMode = 1)
+  private static function setErrorHandlingMode(int $errorHandlingMode = 1)
   {
 
     ### ошибки выполнения

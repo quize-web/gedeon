@@ -50,10 +50,10 @@ tuner::databaseLoginData();
 ### настройки по умолчанию - для локального сервера
 
 ### отображать ли скорость загрузки приложения
-tuner::revealPageLoadTime(true);
+tuner::showApplicationTimeOutlay(true);
 
 ### задаем название пути к панели управления (по умолчанию - 'panel')
-tuner::setPanelName('panel');
+tuner::setPanelKey('panel');
 
 
 ### запуск ядра ###

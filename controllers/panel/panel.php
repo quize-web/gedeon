@@ -8,7 +8,6 @@
 
 namespace controllers\panel;
 
-use core\database;
 use core\router;
 use modules\printer;
 use core\redirector;

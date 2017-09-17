@@ -59,10 +59,10 @@ class tuner
    * @uses core
    * @return  void
    **/
-  public static function revealPageLoadTime(bool $status = true)
+  public static function showApplicationTimeOutlay(bool $status = true)
   {
 
-    core::$revealPageLoadTime = $status;
+    core::$showApplicationTimeOutlay = $status;
 
   }
 
@@ -70,14 +70,14 @@ class tuner
   /**
    * Установить путь / адрес панели
    *
-   * @param $panelName string название панели
+   * @param $panelKey string название панели
    * @uses router
    * @return void
    **/
-  public static function setPanelName(string $panelName = 'panel')
+  public static function setPanelKey(string $panelKey = 'panel')
   {
 
-    router::$panelName = '/' . $panelName . '/';
+    router::$panelKey = '/' . $panelKey . '/';
 
   }
 
@@ -90,6 +90,7 @@ class tuner
    * @param $password string пароль для входа пользователя
    * @param $database string название необходимой нам базы данных
    * @uses database
+   * @uses core
    * @return void
    **/
   public static function databaseLoginData(

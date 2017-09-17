@@ -10,27 +10,29 @@ namespace modules;
 
 use Exception;
 use core\router;
+use modules\keeper;
 
 
 /* * *
  * Конструктор для построения frontend части приложения
  * * */
+
 class printer
 {
 
   /**
-   * Путь к папкам с секторами
+   * Путь к каталогам с секторами
    *
    * @var $templatesPath string
    **/
   private $componentsPath;
 
   /**
-   * Путь к каркасам
+   * Путь к каталогу с каркасами
    *
    * @var $carcassesPath string
    **/
-  private $carcassPath;
+  private $carcassesPath;
 
   /**
    * Текущий выбранный каркас
@@ -65,7 +67,7 @@ class printer
    * Задаем пути к папкам с компонентами и каркасами
    *
    * @uses router
-   * @param $type string тип конструктора ('basic' или 'panel')
+   * @param $type string тип конструктора ('surface' или 'panel')
    **/
   public function __construct(string $type = 'surface')
   {
@@ -86,7 +88,7 @@ class printer
     }
 
     ### путь к каркасам
-    $this->carcassPath = router::deleteSlashes($this->componentsPath . '/carcass/');
+    $this->carcassesPath = router::deleteSlashes($this->componentsPath . '/carcass/');
 
   }
 
@@ -103,7 +105,7 @@ class printer
 
     $carcassFile = router::folderToFile(
       router::deleteSlashes(
-        $this->carcassPath . '/' . $carcassName . '/'
+        $this->carcassesPath . '/' . $carcassName . '/'
       )
     );
 
@@ -167,17 +169,57 @@ class printer
 
 
   /**
-   * Внедрить переменную в шаблон
+   * Внедрить переменные в шаблон
    *
    * Внимание: массив должен быть ассоциативным!
    *
-   * @param $variables array внедряемая переменная
+   * @param $variables array внедряемые переменные
    * @return void
    **/
   public function injectVariables(array $variables)
   {
 
-    $this->variables = array_merge($this->variables, $variables);
+    foreach ($variables as $variableName => $variableValue) {
+
+      self::injectVariable($variableName, $variableValue);
+
+    }
+
+  }
+
+  /**
+   * Внедрить переменную в шаблон
+   *
+   * @param $variableName string название внедряемой переменной переменная
+   * @param $variableValue mixed значение внедряемой переменной переменная
+   * @uses Exception
+   * @throws Exception выдает ошибку, если переменная существует и ей присвоено значение
+   * @return void
+   **/
+  public function injectVariable(string $variableName, $variableValue)
+  {
+
+    if ($this->isVariableInTemplate($variableName))
+      throw new Exception('Переменная ' . $variableName . ' уже существует.');
+
+    else
+      $this->variables[$variableName] = $variableValue;
+
+  }
+
+
+  /**
+   * Проверка на существование переменной в шаблоне
+   *
+   * @param $variableName string название переменной
+   * @return boolean
+   **/
+  private function isVariableInTemplate($variableName)
+  {
+
+    if (!empty($this->variables[$variableName])) return true;
+
+    else return false;
 
   }
 
@@ -494,6 +536,40 @@ class printer
 
     ### выводим базовый шаблон
     $this->print();
+
+  }
+
+
+  /**
+   * Получить список каркасов
+   *
+   * @uses keeper
+   * @return array
+   **/
+  public function getCarcassesList(): array
+  {
+
+    $carcassesFilesArray = keeper::getFilesList($this->carcassesPath);
+
+    return keeper::getFilesNames($carcassesFilesArray);
+
+  }
+
+
+  /**
+   * Создаем JSON шаблона
+   *
+   * Ключ массива - название каркаса
+   * Элементы массива - название секторов
+   *
+   * @param $carcassName string название каркаса
+   * @param $sectorsArray array массив с названиями секторов каркаса
+   * @return string
+   **/
+  public function createTemplateJSON(string $carcassName, array $sectorsArray = []): string
+  {
+
+    return json_encode([$carcassName => $sectorsArray]);
 
   }
 

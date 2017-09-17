@@ -94,16 +94,16 @@ class router
    * Пример: /panel/
    * Путь к панели также можно задать tuner'ом
    *
-   * @var $panelName string
+   * @var $panelKey string
    **/
-  public static $panelName = '/panel/';
+  public static $panelKey = '/panel/';
 
   /**
    * Корневой адрес панели
    *
    * Пример: https://gedeon.io/panel/
    *
-   * @var $panelURI string
+   * @var $panelURL string
    **/
   public static $panelURL;
 
@@ -152,7 +152,7 @@ class router
 
     self::$URI = self::deleteSlashes(self::$URL . self::$URN);
 
-    self::$panelURL = self::deleteSlashes(self::$URL . self::$panelName);
+    self::$panelURL = self::deleteSlashes(self::$URL . self::$panelKey);
 
     self::$panelURN = self::deleteSlashes(str_replace(self::$panelURL, '/', self::$URI));
 
@@ -223,7 +223,7 @@ class router
   {
 
     return
-      (self::buildArrayPath()[0] == self::deleteSlashes(self::$panelName, 'both'));
+      (self::buildArrayPath()[0] == self::deleteSlashes(self::$panelKey, 'both'));
 
   }
 
@@ -347,17 +347,26 @@ class router
    * Проверка наличия POST или GET запроса
    *
    * @param $returnMethod boolean возвращать или не возвращать тип запроса в виде строки
+   * @param $keyConditions array условие нахождение в запросе определенного параметра (элемента массива)
    * @return mixed
    **/
-  public static function haveRequest(bool $returnMethod = false)
+  public static function haveRequest(bool $returnMethod = false, array $keyConditions = [])
   {
 
-    if (empty($_POST) && empty($_GET)) return false;
+    ### проверка наличия запроса
+    if (empty($_REQUEST)) return false;
 
-    if ($returnMethod)
-      return $_SERVER["REQUEST_METHOD"];
-    else
-      return true;
+    ### проверка наличия ключей в запросе, если есть условия ($keyConditions)
+    if (!empty($keyConditions)) {
+      foreach ($keyConditions as $keyCondition) {
+        if (!array_key_exists($keyCondition, $_REQUEST))
+          return false;
+      }
+    }
+
+    ### если нужно, возвращаем тип запроса
+    if ($returnMethod) return $_SERVER["REQUEST_METHOD"];
+    else return true;
 
   }
 

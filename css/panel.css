@@ -52,18 +52,27 @@ input[type='submit'],
 button
 {
     display: block;
-    background: none;
+
     padding: 5px 15px;
-    border: 1px solid #556270;
-    color: #556270;
+
     cursor: pointer;
+
+    color: #556270;
+    border: 1px solid #556270;
+    background: none;
 }
 
 input[type='submit']:hover,
 button:hover
 {
+    color: #fff;
     background-color: #556270;
-    color: #ffffff;
+}
+
+th,
+td
+{
+    padding: 0;
 }
 
 /* *** */
@@ -71,7 +80,6 @@ button:hover
 .panel_logo
 {
     position: absolute;
-    z-index: 1;
     right: 50px;
     bottom: 100px;
 
@@ -217,6 +225,9 @@ main
 
 .table_director
 {
+    position: relative;
+    z-index: 1;
+
     width: 100%;
 
     border-collapse: collapse;
@@ -239,24 +250,19 @@ main
 
 .table_director td,
 .table_director th,
-.table_director img
+.table_director img,
+.table_director input[type="image"]
 {
     line-height: 35px;
 
     height: 35px;
-    padding: 0;
 
     vertical-align: middle;
 }
 
-.table_director td:first-of-type,
-.table_director th:first-of-type,
-.table_director td:last-of-type,
-.table_director th:last-of-type
+.table_director__icon
 {
     width: 30px;
-    padding-right: 5px;
-    padding-left: 15px;
 
     text-align: center;
 }
@@ -264,15 +270,13 @@ main
 .table_director td:first-of-type,
 .table_director th:first-of-type
 {
-    padding-right: 5px;
+    padding-right: 10px;
     padding-left: 15px;
 }
 
-.table_director td:last-of-type,
-.table_director th:last-of-type
+.table_director__button
 {
     padding-right: 15px;
-    padding-left: 5px;
 }
 
 .table_director th:first-of-type img,
@@ -281,18 +285,18 @@ main
     width: 25px;
 }
 
-.table_director th:last-of-type img,
-.table_director td:last-of-type img
+.table_director__button img
 {
     width: 15px;
 }
 
-.table_director th:last-of-type a:hover
+th.table_director__button a:hover
 {
     background-color: rgba(255, 255, 255, .1);
 }
 
-.table_director td:last-of-type a:hover
+td.table_director__button a:hover,
+.table_director input[type="image"]:hover
 {
     background-color: rgba(85, 98, 112, .1);
 }
@@ -302,9 +306,15 @@ main
     background-color: #f7f7f7;
 }
 
-.table_director a
+.table_director a,
+.table_director input[type="image"]
 {
     display: block;
+}
+
+.table_director input[type="image"] {
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 /* *** */
@@ -328,4 +338,13 @@ main
     display: block;
 
     margin-bottom: 5px;
+}
+
+.add_element input[type='text']
+{
+    width: 100%;
+    height: 24px;
+
+    border: 1px solid #a6a6a6;
+    border-radius: 5px;
 }
