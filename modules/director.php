@@ -25,18 +25,19 @@ class director
   /**
    * Логика добавления новой страницы / каталога / фильтра
    *
+   * @param $dataForAddition array массив данных для добавление в базу данных
    * @uses database
    * @uses redirector
    * @uses router
    * @return void
    **/
-  public static function addition()
+  public static function addition(array $dataForAddition)
   {
 
-    $_POST['template'] = panel::$printer->createTemplateJSON($_POST['carcass']);
-    unset($_POST['carcass']);
+    $dataForAddition['template'] = panel::$printer->createJSONtemplate($dataForAddition['carcass']);
+    unset($dataForAddition['carcass']);
 
-    database::addRow('pages', $_POST);
+    database::addRow('pages', $dataForAddition);
 
     redirector::redirectTo(router::$parentFolderURI);
 
@@ -46,15 +47,87 @@ class director
    * Логика удаления страницы / каталога / фильтра
    *
    * @param $elementID integer ID элемента, который удаляем
+   * @param $redirectTo string страница, на которую переходим после удаления
    * @uses database
    * @return void
    **/
-  public static function delete(int $elementID, $redirectTo)
+  public static function delete(int $elementID, string $redirectTo)
   {
 
     database::deleteRow('pages', $elementID);
 
     redirector::redirectTo($redirectTo);
+
+  }
+
+  /**
+   * Логика редактирование страницы / каталога / фильтра
+   *
+   * @param $elementID integer ID элемента, который редактируем
+   * @param
+   * @return void
+   **/
+  public static function editing(int $elementID)
+  {
+
+    // TODO: Делаем
+
+  }
+
+
+  /**
+   * Получение страницы / каталога / фильтра
+   *
+   * @param $elementID integer ID элемента, который получаем
+   * @uses redirector
+   * @return array
+   * TODO: Делаем
+   **/
+  public static function getElement($elementID): array
+  {
+
+    $element = database::getRows('pages', ['id' => $elementID]);
+
+    if (empty($element)) redirector::to404();
+
+    return $element;
+
+  }
+
+
+  /**
+   * Получения элементов дерева
+   *
+   * @param $parentID integer ID родителя
+   * @uses database
+   * @return array
+   **/
+  public static function getElements(int $parentID = 0): array
+  {
+
+    $elements = database::getRows('pages',
+      ['parent' => '0'],
+      ['id', 'key', 'variableTable', 'type']
+    );
+
+    $sortedElements = self::sortElements($elements);
+
+    return $sortedElements;
+
+  }
+
+
+  /**
+   * Сортировка элементов по типу
+   *
+   * @param $elementsArray array элементы, представленные в виде массива
+   * @uses editor
+   * @return array
+   **/
+  private static function sortElements($elementsArray)
+  {
+
+    return editor::sortTwoDimensionalArray($elementsArray, 'type', ['directory', 'funnel', 'document']);
 
   }
 

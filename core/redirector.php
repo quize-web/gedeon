@@ -9,7 +9,12 @@
 namespace core;
 
 use Exception;
+use core\router;
+use controllers\panel\panel;
 
+/* * *
+ * Управление редиректами и заголовками
+ * * */
 
 class redirector
 {
@@ -20,26 +25,16 @@ class redirector
    * Заголовок header также передается с ошибкой 404
    *
    * @uses router
+   * @uses panel
    * @return void
-   * TODO: метод должен возвращать корректный заголовок
    **/
   public static function to404()
   {
 
-    if (router::is404()) {
+    self::sendHeader(404);
 
-      self::sendHeader(404);
-
-    } else {
-
-      if (router::isPanel())
-        $page404URL = router::deleteSlashes(router::$panelURL . '/404/');
-      else
-        $page404URL = router::deleteSlashes(router::$URL . '/404/');
-
-      header('Location: ' . $page404URL);
-
-    }
+    if (router::$isPanel)
+      panel::$printer->buildBasicTemplate('basicPanelTemplate', ['purport' => 'error404'])->print();
 
     exit;
 
@@ -52,13 +47,11 @@ class redirector
    * @param $address string страница, на которую нужно сделать редирект
    * @param $returnHeader boolean отправлять или не отправлять заголовок редиректа
    * @return void
-   * TODO: метод должен возвращать корректный заголовок
    **/
-  public static function redirectTo(string $address, bool $returnHeader = false)
+  public static function redirectTo(string $address)
   {
 
-    if ($returnHeader)
-      self::sendHeader(301);
+    self::sendHeader(301);
 
     header('Location: ' . $address);
 

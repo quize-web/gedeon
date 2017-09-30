@@ -39,11 +39,13 @@ class panel
     self::$printer = new printer('panel');
 
     ### регистрируем базовый шаблон панели
-    self::$printer->registerBasicTemplate('basicPanelTemplate', 'main', [
-      'head' => 'main',
-      'navigation' => 'main',
-      'footer' => 'main'
-    ]);
+    self::$printer
+      ->registerBasicTemplate('basicPanelTemplate', 'main', [
+        'head' => 'main',
+        'navigation' => 'main',
+        'footer' => 'main'
+      ])
+      ->injectVariable('panelURL', router::$panelURL);
 
     ### ищем необходимый контроллер
     self::directMe();
@@ -62,26 +64,25 @@ class panel
   {
 
     ### если в директории
-    if ($folder = router::buildArrayPath()[1] ?? false) {
+    if ($folder = router::$arrayPath[0] ?? false) {
 
       switch ($folder) {
-
-        case '404':
-          self::$printer->printBasicTemplate('basicPanelTemplate', ['purport' => 'error404']);
-          break;
 
         case 'director':
           panelDirector::connect();
           break;
 
-        default: redirector::to404();
+        default:
+          redirector::to404();
 
       }
 
       ### вывод корня панели
     } else {
 
-      self::$printer->printBasicTemplate('basicPanelTemplate', ['purport' => 'index']);
+      self::$printer
+        ->buildBasicTemplate('basicPanelTemplate', ['purport' => 'index'])
+        ->print();
 
     }
 

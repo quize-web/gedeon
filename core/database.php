@@ -13,9 +13,9 @@ use modules\editor;
 use Exception;
 
 
-/*
+/* * *
  * Методы для работы с базой данных
- * */
+ * * */
 
 class database
 {
@@ -258,6 +258,19 @@ class database
     }, $values);
 
     return implode(', ', $values);
+
+  }
+
+
+  /**
+   * Получение ID последней добавленной записи
+   *
+   * @return integer
+   **/
+  public static function getInsertedID(): int
+  {
+
+    return self::$PDO->lastInsertId();
 
   }
 

@@ -9,6 +9,7 @@
 namespace core;
 
 use controllers\panel\panel;
+use modules\editor;
 
 
 /**
@@ -127,10 +128,25 @@ class router
    **/
   public static $parentFolderURI;
 
+  /**
+   * URN массив
+   *
+   * @var array
+   **/
+  public static $arrayPath;
+
+  /**
+   * Свойство определяет, находимся ли мы в административной панели
+   *
+   * @var boolean
+   **/
+  public static $isPanel;
+
 
   /**
    * Устанавливаем / строим константы путей
    *
+   * @uses editor
    * @return void
    **/
   public static function setPaths()
@@ -148,15 +164,17 @@ class router
 
     self::$URL = self::$protocolType . '://' . self::$domain . '/';
 
-    self::$URN = $_SERVER['REQUEST_URI'];
+    self::$URN = editor::deleteSlashes($_SERVER['REQUEST_URI'] . '/');
 
-    self::$URI = self::deleteSlashes(self::$URL . self::$URN);
+    self::$URI = editor::deleteSlashes(self::$URL . self::$URN);
 
-    self::$panelURL = self::deleteSlashes(self::$URL . self::$panelKey);
+    self::$panelURL = editor::deleteSlashes(self::$URL . self::$panelKey);
 
-    self::$panelURN = self::deleteSlashes(str_replace(self::$panelURL, '/', self::$URI));
+    self::$panelURN = editor::deleteSlashes(str_replace(self::$panelURL, '/', self::$URI));
 
     self::$parentFolderURI = dirname(self::$URI) . '/';
+
+    self::$arrayPath = self::buildArrayPath();
 
   }
 
@@ -176,26 +194,40 @@ class router
 
 
   /**
-   * Строим массив из urn
+   * Строим массив из URN
    *
-   * @param $mode string
+   * @uses editor
    * @return array
    **/
-  public static function buildArrayPath(string $mode = 'surface'): array
+  public static function buildArrayPath(): array
   {
 
-    switch ($mode) {
+    $stringPath = editor::deleteSlashes(self::$URN, 'both');
 
-      case 'panel':
-        $stringPath = self::deleteSlashes(self::$panelURN, 'both');
-        break;
+    $URNarray = explode('/', $stringPath);
 
-      default:
-        $stringPath = self::deleteSlashes(self::$URN, 'both');
+    if (self::isPanel($URNarray))
+      array_shift($URNarray);
 
-    }
+    return $URNarray;
 
-    return explode('/', $stringPath);
+  }
+
+
+  /**
+   * Проверяем, находимся ли мы в панели управления и формируем значение свойства $isPanel
+   *
+   * @param $URNarray array
+   * @uses editor
+   * @return boolean
+   **/
+  private static function isPanel(array $URNarray): bool
+  {
+
+    self::$isPanel =
+      ($URNarray[0] == editor::deleteSlashes(self::$panelKey, 'both'));
+
+    return self::$isPanel;
 
   }
 
@@ -209,21 +241,7 @@ class router
   {
 
     return
-      empty(self::buildArrayPath()[0]);
-
-  }
-
-
-  /**
-   * Проверяем, находимся ли мы в панели управления
-   *
-   * @return boolean
-   **/
-  public static function isPanel(): bool
-  {
-
-    return
-      (self::buildArrayPath()[0] == self::deleteSlashes(self::$panelKey, 'both'));
+      empty(self::$arrayPath[0]);
 
   }
 
@@ -238,7 +256,7 @@ class router
 
     # отдельное объявление переменной необходимо, так как функция 'end()'
     # преобразовывает представление массива, меняя его содержимое
-    $arrayPath = self::buildArrayPath();
+    $arrayPath = self::$arrayPath;
 
     return
       (end($arrayPath) == '404');
@@ -256,56 +274,10 @@ class router
   public static function connectToController()
   {
 
-    if (self::isPanel())
+    if (self::$isPanel)
       panel::connect();
     else
       redirector::to404();
-
-  }
-
-
-  /**
-   * Удаление слешей из различных положений строки ($position)
-   *
-   * Пример:
-   * было - /pages/contacts/
-   * стало - pages/contacts/ ### $position = 'first'
-   *
-   * было - /pages/contacts/
-   * стало - /pages/contacts ### $position = 'last'
-   *
-   * было - /pages/contacts/
-   * стало - pages/contacts ### $position = 'both'
-   *
-   * было - https://gedeon.com//pages//contacts/
-   * стало - https://gedeon.com/pages/contacts/ ### $position = 'double'
-   * такой случай ^ является издержкой красивых констант путей в приложении
-   *
-   * @param $string string строка, откуда удаляем
-   * @param $position string откуда удаляем слеши
-   * @return string
-   **/
-  public static function deleteSlashes(string $string, string $position = 'plenty'): string
-  {
-
-    switch ($position) {
-
-      case ('first'):
-        return ltrim($string, '/');
-
-      case ('last'):
-        return rtrim($string, '/');
-
-      case ('both'):
-        return trim($string, '/');
-
-      case ('plenty'):
-        return preg_replace('@(?<!\:)\/\/+@', '/', $string);
-
-      default:
-        return false;
-
-    }
 
   }
 
@@ -346,17 +318,21 @@ class router
   /**
    * Проверка наличия POST или GET запроса
    *
-   * @param $returnMethod boolean возвращать или не возвращать тип запроса в виде строки
+   * @param $methodTypeCondition string условие на тип метода запроса
    * @param $keyConditions array условие нахождение в запросе определенного параметра (элемента массива)
    * @return mixed
    **/
-  public static function haveRequest(bool $returnMethod = false, array $keyConditions = [])
+  public static function haveRequest(string $methodTypeCondition = '', array $keyConditions = [])
   {
 
     ### проверка наличия запроса
     if (empty($_REQUEST)) return false;
 
-    ### проверка наличия ключей в запросе, если есть условия ($keyConditions)
+    ### проверка условия на тип метода запроса
+    if (!empty($methodTypeCondition) AND $methodTypeCondition !== $_SERVER['REQUEST_METHOD'])
+      return false;
+
+    ### проверка наличия ключей в запросе, если есть условие для ключей ($keyConditions)
     if (!empty($keyConditions)) {
       foreach ($keyConditions as $keyCondition) {
         if (!array_key_exists($keyCondition, $_REQUEST))
@@ -364,9 +340,32 @@ class router
       }
     }
 
-    ### если нужно, возвращаем тип запроса
-    if ($returnMethod) return $_SERVER["REQUEST_METHOD"];
-    else return true;
+    return true;
+
+  }
+
+
+  /**
+   * Проверяем путь на визуальные ошибки
+   *
+   * Например на множественные слеши или заглавные буквы
+   *
+   * @uses redirector
+   * @uses editor
+   * @return void
+   **/
+  public static function checkRouteAdequacy()
+  {
+
+    if (preg_match('@[A-Z]+|\/{2,}@', $_SERVER['REQUEST_URI'])) {
+
+      redirector::redirectTo(
+        editor::deleteSlashes(
+          strtolower(self::$URI)
+        )
+      );
+
+    }
 
   }
 

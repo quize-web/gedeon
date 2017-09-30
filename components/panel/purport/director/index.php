@@ -23,16 +23,16 @@
 
       <td class="table_director__icon"><img src="/images/<?= $element['type'] ?>.svg" alt="type"></td>
 
-      <td><a href="<?= $panelURL ?>/director/<?= $element['id'] ?>/"><?= $element['key'] ?></a></td>
+      <td><a href="#"><?= $element['key'] ?></a></td>
 
       <td><?= $element['variableTable'] ?></td>
 
       <td class="table_director__icon table_director__button">
-        <a href="<?= $panelURL ?>/director/edit/<?= $element['id'] ?>/"><img src="/images/settings.svg"></a>
+        <a href="<?= $panelURL ?>director/edit/<?= $element['id'] ?>/"><img src="/images/settings.svg"></a>
       </td>
 
       <td class="table_director__icon table_director__button">
-        <form action="<?= $panelURL ?>/director/delete/" method="POST">
+        <form action="<?= $panelURL ?>director/delete/" method="POST">
           <input type="hidden" name="ID" value="<?= $element['id'] ?>">
           <input type="hidden" name="originURI" value="<?= $URI ?>">
           <input type="image" src="/images/delete.svg">

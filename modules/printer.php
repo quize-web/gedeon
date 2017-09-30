@@ -10,8 +10,6 @@ namespace modules;
 
 use Exception;
 use core\router;
-use modules\keeper;
-
 
 /* * *
  * Конструктор для построения frontend части приложения
@@ -62,11 +60,19 @@ class printer
    **/
   private $variables = [];
 
+  /**
+   * Готовый к выводу шаблон в виде строки
+   *
+   * @var $templateContent string
+   **/
+  private $templateContent;
+
 
   /**
    * Задаем пути к папкам с компонентами и каркасами
    *
    * @uses router
+   * @uses editor
    * @param $type string тип конструктора ('surface' или 'panel')
    **/
   public function __construct(string $type = 'surface')
@@ -77,18 +83,18 @@ class printer
 
       case 'surface':
         ### путь шаблонам
-        $this->componentsPath = router::deleteSlashes(router::$root . '/components/surface/');
+        $this->componentsPath = editor::deleteSlashes(router::$root . '/components/surface/');
         break;
 
       case 'panel':
         ### путь к шаблонам панели
-        $this->componentsPath = router::deleteSlashes(router::$root . '/components/panel/');
+        $this->componentsPath = editor::deleteSlashes(router::$root . '/components/panel/');
         break;
 
     }
 
     ### путь к каркасам
-    $this->carcassesPath = router::deleteSlashes($this->componentsPath . '/carcass/');
+    $this->carcassesPath = editor::deleteSlashes($this->componentsPath . '/carcass/');
 
   }
 
@@ -98,13 +104,14 @@ class printer
    *
    * @param $carcassName string название необходимого каркаса
    * @uses router
+   * @uses editor
    * @return string
    **/
   private function getCarcassContent(string $carcassName): string
   {
 
     $carcassFile = router::folderToFile(
-      router::deleteSlashes(
+      editor::deleteSlashes(
         $this->carcassesPath . '/' . $carcassName . '/'
       )
     );
@@ -121,13 +128,14 @@ class printer
    * @param $sectorName string название сектора
    * @param $chosenSector string название выбранного сектора
    * @uses router
+   * @uses editor
    * @return string
    **/
   private function getSectorContent(string $sectorName, string $chosenSector): string
   {
 
     $sectorFile = router::folderToFile(
-      router::deleteSlashes(
+      editor::deleteSlashes(
         $this->componentsPath . '/' . $sectorName . '/' . $chosenSector . '/'
       )
     );
@@ -174,7 +182,7 @@ class printer
    * Внимание: массив должен быть ассоциативным!
    *
    * @param $variables array внедряемые переменные
-   * @return void
+   * @return self
    **/
   public function injectVariables(array $variables)
   {
@@ -185,6 +193,8 @@ class printer
 
     }
 
+    return $this;
+
   }
 
   /**
@@ -194,7 +204,7 @@ class printer
    * @param $variableValue mixed значение внедряемой переменной переменная
    * @uses Exception
    * @throws Exception выдает ошибку, если переменная существует и ей присвоено значение
-   * @return void
+   * @return self
    **/
   public function injectVariable(string $variableName, $variableValue)
   {
@@ -204,6 +214,8 @@ class printer
 
     else
       $this->variables[$variableName] = $variableValue;
+
+    return $this;
 
   }
 
@@ -368,8 +380,9 @@ class printer
    *
    * @param $component string путь к компонента (начинается от папки components)
    * @param $componentDirectory string директория компонента
-   * @uses Exception
    * @uses router
+   * @uses editor
+   * @uses Exception
    * @throws Exception выдает ошибку, если включаемого компонента не существует
    * @return boolean
    **/
@@ -378,7 +391,7 @@ class printer
 
     $fullPath =
       router::folderToFile(
-        router::deleteSlashes(
+        editor::deleteSlashes(
           $this->componentsPath . '/' . $componentDirectory . '/' . $component . '/'
         )
       );
@@ -437,13 +450,13 @@ class printer
 
 
   /**
-   * Выводим шаблон
+   * Заменяем переменные секторов в каркасе на сектора
    *
    * @uses Exception
    * @throws Exception выдает ошибку, если есть незаполненные сектора
-   * @return void
+   * @return self
    **/
-  public function print()
+  public function buildTemplate()
   {
 
     ### проверяем, нет ли незаполненных секторов
@@ -471,8 +484,28 @@ class printer
 
     }
 
-    ### выводим шаблон
-    echo $templateContent;
+    $this->templateContent = $templateContent;
+
+    return $this;
+
+  }
+
+
+  /**
+   * Выводим шаблон
+   *
+   * @uses Exception
+   * @throws Exception выдает ошибку, шаблон не построен
+   * @return void
+   **/
+  public function print()
+  {
+
+    if (!empty($templateContent = $this->templateContent))
+      echo $templateContent;
+
+    else
+      throw new Exception('Шаблон не построен! Сначала постройте шаблон методом \'buildTemplate\'.');
 
   }
 
@@ -523,9 +556,9 @@ class printer
    * @param $basicTemplateName string название базового шаблона для вывода
    * @param $chosenSectorsArray array массив с выбранными секторами
    * @param $ignoreEmptySectors boolean игнорируем или нет пустые сектора
-   * @return void
+   * @return self
    **/
-  public function printBasicTemplate(string $basicTemplateName, array $chosenSectorsArray, bool $ignoreEmptySectors = false)
+  public function buildBasicTemplate(string $basicTemplateName, array $chosenSectorsArray, bool $ignoreEmptySectors = false)
   {
 
     ### внедряем базовый шаблон, регистрируем и заполняем сектора
@@ -535,7 +568,9 @@ class printer
     if ($ignoreEmptySectors) $this->ignoreEmptySectors();
 
     ### выводим базовый шаблон
-    $this->print();
+    $this->buildTemplate();
+
+    return $this;
 
   }
 
@@ -566,10 +601,24 @@ class printer
    * @param $sectorsArray array массив с названиями секторов каркаса
    * @return string
    **/
-  public function createTemplateJSON(string $carcassName, array $sectorsArray = []): string
+  public function createJSONtemplate(string $carcassName, array $sectorsArray = []): string
   {
 
     return json_encode([$carcassName => $sectorsArray]);
+
+  }
+
+
+  /**
+   * Получить массив шаблона из JSON ячейки
+   *
+   * @param $JSON string JSON строка с шаблоном
+   * @return array
+   **/
+  public function getJSONtemplate(string $JSON): array
+  {
+
+    // TODO: Делаем
 
   }
 

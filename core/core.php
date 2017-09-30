@@ -38,12 +38,28 @@ class core
 
 
   /**
+   * Подключение необходимых модулей перед построением и запуском ядра
+   *
+   * @return void
+   **/
+  public static function includeNecessaryModules()
+  {
+
+    ### преобразование строк и массивов
+    require_once(__ROOT__ . '/modules/editor.php');
+
+  }
+
+
+  /**
    * Подключение необходимых классов для дальнейшей настройки и запуска
    *
    * @return void
    **/
   public static function buildCore()
   {
+
+    self::includeNecessaryModules();
 
     ### управление путями
     require_once('router.php');
@@ -93,6 +109,9 @@ class core
 
     ### подключаемся к базе данных
     database::connect();
+
+    ### проверяем путь на визуальные ошибки
+    router::checkRouteAdequacy();
 
     ### подключаемся к необходимому контроллеру
     router::connectToController();
